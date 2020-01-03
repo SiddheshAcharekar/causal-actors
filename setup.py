@@ -3,8 +3,8 @@ from setuptools import setup
 
 
 setup(
-    name="box_office",
-    author="Robert Ness",
+    name="causal_actors",
+    author="Siddhesh Acharekar",
     install_requires=[
         'numpy>=1.17',
         'pandas>=0.25.3',
