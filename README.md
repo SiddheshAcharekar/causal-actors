@@ -1,2 +1,4 @@
-# causal-actors
-Estimating Causal Effects of Actors on Movie Revenue
+# Estimating Causal Effects of Actors on Movie Revenue
+Traditional Machine Learning when applied to multi-causal problems fails to account for inherent biases in the data generation process that affects the outcome. A Causal approach to this problem can help solve this issue and give debiased estimates of the outcome.
+
+One such problem that I am working on is the prediction of box office revenue from a given cast of actors and explaining how much revenue every actor can account for. The details of this study can be found in the report [here]( https://github.com/SiddheshAcharekar/causal-actors/blob/master/project_report.pdf).
