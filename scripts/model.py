@@ -20,6 +20,7 @@ import pickle
 
 # Data Loader
 import sys
+
 # insert at 1, 0 is the script path (or '' in REPL)
 sys.path.insert(1, '../box_office/')
 from data_loader import load_tensor_data
@@ -29,14 +30,18 @@ pyro.set_rng_seed(101)
 # Load all data
 x_train_tensors, y_train_tensors, actors, full_data = load_tensor_data("../data/ohe_movies.csv")
 
+
 # Define model
 
 def f_z(params):
-    """Samples from P(Z)"""    
+    """
+    Samples from P(Z) which is the latent factor model's distribution.
+    """    
     z_mean0 = params['z_mean0']
     z_std0 = params['z_std0']
     z = pyro.sample("z", Normal(loc = z_mean0, scale = z_std0))
     return z
+
 
 def f_x(z, params):
     """
@@ -48,6 +53,7 @@ def f_x(z, params):
     that in P(X|Z), the elements of the vector of X are
     conditionally independent of one another given Z.
     """
+
     def sample_W():
         """
         Sample the W matrix
@@ -55,10 +61,12 @@ def f_x(z, params):
         W is a parameter of P(X|Z) that is sampled from a Normal
         with location and scale hyperparameters w_mean0 and w_std0
         """
+
         w_mean0 = params['w_mean0']
         w_std0 = params['w_std0']
         W = pyro.sample("W", Normal(loc = w_mean0, scale = w_std0))
         return W
+    
     W = sample_W()
     linear_exp = torch.matmul(z, W)
     # sample x using the Bernoulli likelihood
@@ -76,6 +84,7 @@ def f_y(x, z, params):
     the Bayesian linear regression component of the overall
     model.
     """
+
     predictors = torch.cat((x, z), 1)
 
     w = pyro.sample('weight', Normal(params['weight_mean0'], params['weight_std0']))
@@ -113,8 +122,13 @@ def step_1_guide(params):
                           constraint=constraints.positive)
     w = pyro.sample("w", Normal(loc = qw_mean, scale = qw_stddv))
 
+
 # Define guide function for fitting Bayesian Regression Model
 def step_2_guide(params):
+	"""
+	Guide function for fitting P(w|X, Z) i.e regression parameters given observed variables and latent variables.
+	"""
+
     # Z and W are just sampled using param values optimized in previous step
     z = pyro.sample("z", Normal(loc = params['qz_mean'], scale = params['qz_stddv']))
     w = pyro.sample("w", Normal(loc = params['qw_mean'], scale = params['qw_stddv']))
@@ -138,6 +152,10 @@ def step_2_guide(params):
 
 # Train the Latent Variable Model
 def training_step_1(x_data, params):
+	"""
+	Function to train latent variable model.
+	Conditions on X and fits Z.
+	"""
     
     adam_params = {"lr": 0.0005}
     optimizer = Adam(adam_params)
@@ -167,6 +185,10 @@ def training_step_1(x_data, params):
 
 # Train the Bayesian Regression
 def training_step_2(x_data, y_data, params):
+	"""
+	Function to train regression model that fits regression parameters to observed X and previously inferred latent Z.
+	"""
+
     print("Training Bayesian regression parameters...")
     pyro.set_rng_seed(101)
     num_iterations = 1000
@@ -194,6 +216,10 @@ def training_step_2(x_data, y_data, params):
 
 # Aggregated function to train entire model
 def train_model():
+	"""
+	Aggregate function to train the entire generative model.
+	"""
+
     num_datapoints, data_dim = x_train_tensors.shape
     
     latent_dim = 30 # can be changed
